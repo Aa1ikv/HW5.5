@@ -1,22 +1,8 @@
-package com.example.hw55
-
-import android.os.Bundle
-import androidx.activity.enableEdgeToEdge
-import androidx.activity.viewModels
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.hw55.databinding.ActivityMainBinding
-import com.example.hw55.ui.CharacterAdapter
-import dagger.hilt.android.AndroidEntryPoint
-
-
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
     private val binding by lazy { ActivityMainBinding.inflate(layoutInflater) }
-
+    private val database by lazy { AppDatabase.getDatabase(this) }
     private val viewModel: MainViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -24,10 +10,25 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
         setupRecycler()
 
+        // Получаем персонажей с API
         viewModel.getCharacters()
 
-        viewModel.charactersData.observe(this) { data ->
+        // Загружаем сохранённых персонажей из базы данных
+        viewModel.loadViewedCharacters()
 
+        viewModel.charactersData.observe(this) { data ->
+            // Обработка данных с API
+            data?.let {
+                // Вы можете сохранить персонажей
+                it.forEach { character ->
+                    viewModel.saveCharacter(character)
+                }
+            }
+        }
+
+        viewModel.viewedCharacters.observe(this) { viewedCharacters ->
+            // Обновляем RecyclerView с сохранёнными персонажами
+            (binding.rvCharacters.adapter as? CharacterAdapter)?.submitList(viewedCharacters)
         }
     }
 
@@ -36,7 +37,7 @@ class MainActivity : AppCompatActivity() {
         rvCharacters.layoutManager = LinearLayoutManager(
             this@MainActivity,
             LinearLayoutManager.VERTICAL,
-            true
+            false
         )
     }
 }

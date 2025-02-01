@@ -12,21 +12,22 @@ import com.example.rickandmorti.R
 import com.example.rickandmorti.databinding.ItemCharacterBinding
 
 
-class CharacterAdapter() : ListAdapter<Character, CharacterAdapter.CharacterViewHolder>(diffUtil) {
-    inner class CharacterViewHolder(private val binding: Item'CharacterBinding) :
+class CharacterAdapter() : ListAdapter<CharacterEntity, CharacterAdapter.CharacterViewHolder>(diffUtil) {
+
+    inner class CharacterViewHolder(private val binding: ItemCharacterBinding) :
         RecyclerView.ViewHolder(binding.root) {
-        fun onBind(character: Character) = with(binding) {
+        fun onBind(character: CharacterEntity) = with(binding) {
             characterName.text = character.name
-            characterLocation.text = character.location?.name
-            characterFirstSeen.text = character.origin?.name
-            imgCharacter.load(character.image){
+            characterLocation.text = character.status // Измените для отображения нужной локации
+            characterFirstSeen.text = character.status // Измените для отображения нужного источника
+            imgCharacter.load(base64ToBitmap(character.imageBase64)) {
                 crossfade(true)
             }
             characterStatus.text = character.status
             colorIndicator.setImageResource(
-                when{
-                    character.status?.contains("Dead") == true -> R.drawable.ic_circle_red
-                    character.status?.contains("Alive") == true -> R.drawable.ic_circle_green
+                when {
+                    character.status.contains("Dead", ignoreCase = true) -> R.drawable.ic_circle_red
+                    character.status.contains("Alive", ignoreCase = true) -> R.drawable.ic_circle_green
                     else -> R.drawable.ic_circle_gray
                 }
             )
@@ -46,12 +47,12 @@ class CharacterAdapter() : ListAdapter<Character, CharacterAdapter.CharacterView
     }
 
     companion object {
-        val diffUtil = object : DiffUtil.ItemCallback<Character>() {
-            override fun areItemsTheSame(oldItem: Character, newItem: Character): Boolean {
+        val diffUtil = object : DiffUtil.ItemCallback<CharacterEntity>() {
+            override fun areItemsTheSame(oldItem: CharacterEntity, newItem: CharacterEntity): Boolean {
                 return oldItem.id == newItem.id
             }
 
-            override fun areContentsTheSame(oldItem: Character, newItem: Character): Boolean {
+            override fun areContentsTheSame(oldItem: CharacterEntity, newItem: CharacterEntity): Boolean {
                 return oldItem == newItem
             }
         }
